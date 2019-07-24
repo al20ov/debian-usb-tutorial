@@ -78,4 +78,12 @@ Your flash drive should now be ready to boot. Unmount everything and eject the d
 
 # In the new system
 
-+ You might not be on a desktop computer hooked up to 
++ You might not be on a desktop computer hooked up to [WIP]
+
+# Useful resources after the installation
+
+Minimal install with openbox (if your computer has limited ram or your flash drive is only 2GB, like mine)
+
++ https://prahladyeri.com/blog/2016/02/minimal-debian-desktop-setup.html
+
+Command to boot a qemu vm from your USB drive: `sudo -i qemu-system-x86_64 -drive format=raw,file=/dev/sdc`
