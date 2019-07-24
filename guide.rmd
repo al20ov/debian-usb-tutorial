@@ -1,0 +1,81 @@
+---
+title: Installing Debian 10 buster on a flash drive with debootstrap
+geometry: margin=2.5cm
+fontsize: 12pt
+output:
+    pdf_document:
+        toc_depth: 3
+        number_sections: true
+---
+
+*****************************************************************
+
+# Installing debootstrap
+
+Just run `apt install debootstrap` and you'll be all set!
+
+
+
+
+# Preparing and formatting the drive
+
+@. Locate your USB drive by typing `fdisk -l` as root or sudo.
+My USB drive is assigned to `/dev/sdc`, but yours will likely be another letter.
+
+@. Make sure your drive's partition table is set to `MBR (dos)`.
+
+@. Use your favorite disk partitioning command (I use `cfdisk`) and create
+at least one partition, that will contain the whole linux filesystem.
+If you want, you can also add a swap partition if your flash drive is big enough,
+I won't because mine is only 2GB...
+
+@. Format your new partition as ext4 with the command `mkfs.ext4 /dev/sdc1`.
+Replace `/dev/sdc1` with your new partition.
+
+
+
+
+# Installing debian on your flash drive with debootstrap
+
+@. After partitioning, my new linux filesystem partition is assigned to `/dev/sdc1`.
+You need to mount it in order to run debootstrap on it. Use `mount /dev/sdc1 /mnt`
+to mount it to the `/mnt` directory.
+
+@. Run `sudo debootstrap --arch amd64 buster /mnt` to download a fresh copy of all the
+debian packages and extract them into /mnt.
+
+@. Run `sudo -- bash -c 'for i in proc sys dev dev/pts run; do mount --bind /$i $i;done'` [^1]
+in order to mount and bind all necessary directories such as /proc, /dev, and so on
+to the new system for the installation process to work properly.
+
+[^1]: Thank you to papy-tux for this one-liner!
+http://papy-tux.legtux.org/doc1162/index.html#mozTocId945542
+
+@. Run `sudo chroot /mnt /bin/bash` to chroot (change the root directory) into the new system.
+
+@. Run `apt update`, then `apt install vim linux-image-amd64 dkms` to install a decent text editor,
+the linux kernel to be able to boot without chrooting into the system from another linux install,
+and dkms, for kernel modules.
+This will take a while, even with a good internet connection.
+
+@. Find the UUID of your root partition by typing `blkid` and locating your new linux filesystem,
+in my case, `/dev/sdc1`.
+
+@. Add the root partition to `/etc/fstab` with your text editor of choice (`vim` for example):
+```
+UUID=4d8dac3a-5232-49d9-abc0-8c4d39114290	/	ext4	defaults	0	1
+```
+
+@. Install grub2 (the bootloader) to be able to boot your new system outside of a chroot:
+`apt install grub2` (the package might be called `grub-pc`).
+
+@. If the package's post-install script does not do everything automatically, run `grub-install /dev/sdc`
+and `update-grub`.
+
+@. Set a new password for root using `passwd`, you can even create a new user with `adduser`.
+
+Your flash drive should now be ready to boot. Unmount everything and eject the drive.
+
+# In the new system
+
++ You might not be on a desktop computer hooked up to 
